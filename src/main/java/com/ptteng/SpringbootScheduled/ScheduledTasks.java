@@ -1,4 +1,4 @@
-package com.ptteng;
+package com.ptteng.SpringbootScheduled;
 
 import com.ptteng.pojo.MybatisDemo;
 import com.ptteng.service.InserUserService;
@@ -12,6 +12,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
+ *
+ *
+ *
+ * 这个是springboot自带的定时任务。。注解删除就可以用了。
+ *
  * Created by ${MIND-ZR} on 2018/1/13.
  */
 //@Component

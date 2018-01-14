@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 /**
  * Created by ${MIND-ZR} on 2018/1/13.
  */
-@Component
+
 public class MyJobFactory extends AdaptableJobFactory {
     @Autowired
     private AutowireCapableBeanFactory capableBeanFactory;

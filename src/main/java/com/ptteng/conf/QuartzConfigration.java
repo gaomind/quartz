@@ -1,21 +1,14 @@
 package com.ptteng.conf;
 
 
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.SchedulerFactory;
-import org.quartz.Trigger;
-import org.quartz.impl.StdSchedulerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.quartz.spi.JobFactory;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.scheduling.quartz.CronTriggerFactoryBean;
-import org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 
-import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -23,36 +16,35 @@ import java.util.Properties;
  */
 @Configuration
 public class QuartzConfigration {
-    @Autowired
-    private MyJobFactory myJobFactory;  //自定义的factory
+    public static final String QUARTZ_PROPERTIES_PATH = "/quartz.properties";
 
-    //获取工厂bean
     @Bean
-    public SchedulerFactoryBean schedulerFactoryBean() {
+    public JobFactory jobFactory(ApplicationContext applicationContext) {
+        AutowiringSpringBeanJobFactory jobFactory = new AutowiringSpringBeanJobFactory();
+        jobFactory.setApplicationContext(applicationContext);
+        return jobFactory;
+    }
+
+    @Bean
+    public SchedulerFactoryBean schedulerFactoryBean( JobFactory jobFactory) {
         SchedulerFactoryBean schedulerFactoryBean = new SchedulerFactoryBean();
-        try {
-            schedulerFactoryBean.setQuartzProperties(quartzProperties());
-            schedulerFactoryBean.setJobFactory(myJobFactory);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        schedulerFactoryBean.setJobFactory(jobFactory);
+        schedulerFactoryBean.setStartupDelay(20);
+        //用于quartz集群,加载quartz数据源配置
+        schedulerFactoryBean.setQuartzProperties(quartzProperties());
         return schedulerFactoryBean;
     }
 
-    //指定quartz.properties
-    @Bean
-    public Properties quartzProperties() throws IOException {
-        PropertiesFactoryBean propertiesFactoryBean = new PropertiesFactoryBean();
-        propertiesFactoryBean.setLocation(new ClassPathResource("/quartz.properties"));
-        propertiesFactoryBean.afterPropertiesSet();
-        return propertiesFactoryBean.getObject();
-    }
-
-    //创建schedule
-    @Bean(name = "scheduler")
-    public Scheduler scheduler() {
-        return schedulerFactoryBean().getScheduler();
+    public Properties quartzProperties(){
+        PropertiesFactoryBean factoryBean = new PropertiesFactoryBean();
+        factoryBean.setLocation(new ClassPathResource(QUARTZ_PROPERTIES_PATH));
+        try {
+            factoryBean.afterPropertiesSet();
+            return factoryBean.getObject();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
 }
 
